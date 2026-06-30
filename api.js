@@ -7,7 +7,7 @@
 
 // CHANGE THIS to your deployed backend URL once hosted
 // e.g. 'https://gym-tracker-api.onrender.com/api'
-const API_BASE = window.API_BASE_URL || 'https://ironlog-backend.onrender.com/api';
+const API_BASE = window.API_BASE_URL || 'https://gym-tracker-backend-1-1oax.onrender.com/api';
 
 const Api = (() => {
   const TOKEN_KEY = 'gt_token';
