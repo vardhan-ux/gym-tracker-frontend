@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IRONLOG — Sign In</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="auth-shell">
+  <div class="auth-card">
+    <div class="brand">IRON<span>LOG</span></div>
+    <div class="tagline">Track every set. See every gain.</div>
+
+    <div class="error-msg" id="errorBox"></div>
+
+    <!-- LOGIN FORM -->
+    <form id="loginForm">
+      <div class="field">
+        <label for="loginEmail">Email</label>
+        <input type="email" id="loginEmail" required autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <input type="password" id="loginPassword" required autocomplete="current-password">
+      </div>
+      <button type="submit" class="btn-primary" id="loginBtn">Log In</button>
+    </form>
+
+    <!-- SIGNUP FORM -->
+    <form id="signupForm" style="display:none;">
+      <div class="field">
+        <label for="suName">Full Name</label>
+        <input type="text" id="suName" required>
+      </div>
+      <div class="field">
+        <label for="suEmail">Email</label>
+        <input type="email" id="suEmail" required>
+      </div>
+      <div class="field">
+        <label for="suPassword">Password</label>
+        <input type="password" id="suPassword" required minlength="4">
+      </div>
+      <button type="submit" class="btn-primary" id="signupBtn">Create Account</button>
+    </form>
+
+    <div class="auth-switch">
+      <span id="switchPrompt">New here?</span>
+      <button id="switchBtn" type="button">Sign up</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/api.js"></script>
+<script>
+  const loginForm = document.getElementById('loginForm');
+  const signupForm = document.getElementById('signupForm');
+  const switchBtn = document.getElementById('switchBtn');
+  const switchPrompt = document.getElementById('switchPrompt');
+  const errorBox = document.getElementById('errorBox');
+  let mode = 'login';
+
+  // Redirect if already logged in
+  if (Api.getToken()) window.location.href = 'dashboard.html';
+
+  function showError(msg) {
+    errorBox.textContent = msg;
+    errorBox.classList.add('show');
+  }
+  function clearError() {
+    errorBox.classList.remove('show');
+  }
+  function setLoading(btn, loading, label) {
+    btn.disabled = loading;
+    btn.textContent = loading ? 'Please wait…' : label;
+  }
+
+  switchBtn.addEventListener('click', () => {
+    clearError();
+    if (mode === 'login') {
+      mode = 'signup';
+      loginForm.style.display = 'none';
+      signupForm.style.display = 'block';
+      switchPrompt.textContent = 'Already have an account?';
+      switchBtn.textContent = 'Log in';
+    } else {
+      mode = 'login';
+      signupForm.style.display = 'none';
+      loginForm.style.display = 'block';
+      switchPrompt.textContent = 'New here?';
+      switchBtn.textContent = 'Sign up';
+    }
+  });
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearError();
+    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+    const password = document.getElementById('loginPassword').value;
+    const btn = document.getElementById('loginBtn');
+    setLoading(btn, true, 'Log In');
+    try {
+      await Api.login(email, password);
+      window.location.href = 'dashboard.html';
+    } catch (err) {
+      showError(err.message || 'Could not log in. Is the backend running?');
+    } finally {
+      setLoading(btn, false, 'Log In');
+    }
+  });
+
+  signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearError();
+    const name = document.getElementById('suName').value.trim();
+    const email = document.getElementById('suEmail').value.trim().toLowerCase();
+    const password = document.getElementById('suPassword').value;
+    const btn = document.getElementById('signupBtn');
+    setLoading(btn, true, 'Create Account');
+    try {
+      await Api.signup({ name, email, password });
+      window.location.href = 'dashboard.html?welcome=1';
+    } catch (err) {
+      showError(err.message || 'Could not sign up. Is the backend running?');
+    } finally {
+      setLoading(btn, false, 'Create Account');
+    }
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IRONLOG — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+<div class="app-shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">IRON<span>LOG</span></div>
+    <button class="nav-item active" data-tab="overview">Overview</button>
+    <button class="nav-item" data-tab="log">Log Workout</button>
+    <button class="nav-item" data-tab="plans">Plans</button>
+    <button class="nav-item" data-tab="bmi">BMI Calculator</button>
+    <button class="nav-item" data-tab="progress">Progress</button>
+    <div class="user-box">
+      <div class="user-name" id="sidebarName">—</div>
+      <a href="#" class="logout-link" id="logoutBtn">Log out</a>
+    </div>
+  </aside>
+
+  <!-- Mobile top bar -->
+  <div class="mobile-bar">
+    <div class="brand">IRON<span style="color:var(--volt)">LOG</span></div>
+    <select id="mobileNav" style="background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:8px;">
+      <option value="overview">Overview</option>
+      <option value="log">Log Workout</option>
+      <option value="plans">Plans</option>
+      <option value="bmi">BMI Calculator</option>
+      <option value="progress">Progress</option>
+    </select>
+  </div>
+
+  <main class="main">
+
+    <!-- ===== OVERVIEW ===== -->
+    <section class="tab-panel" id="tab-overview">
+      <div class="page-head">
+        <h1 id="greeting">Welcome back</h1>
+        <p>Here's where your training stands today.</p>
+      </div>
+
+      <div class="grid grid-3" style="margin-bottom:18px;">
+        <div class="card streak-card">
+          <div class="streak-ring">
+            <svg viewBox="0 0 100 100" width="96" height="96">
+              <circle class="ring-bg" cx="50" cy="50" r="42"></circle>
+              <circle class="ring-fg" id="ringFg" cx="50" cy="50" r="42" stroke-dasharray="264" stroke-dashoffset="264"></circle>
+            </svg>
+            <div class="ring-label" id="ringLabel">0/7</div>
+          </div>
+          <div>
+            <h3>This Week</h3>
+            <div style="font-size:0.85rem;color:var(--muted);">days trained out of 7</div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Total Workouts Logged</h3>
+          <div class="stat" id="statTotal">0</div>
+        </div>
+        <div class="card">
+          <h3>Active Plan</h3>
+          <div class="stat" id="statPlan" style="font-size:1.3rem;">None</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Recent Sessions</h3>
+        <table class="table" id="recentTable">
+          <thead><tr><th>Date</th><th>Exercise</th><th>Sets</th><th>Reps</th><th>Weight</th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty-state" id="recentEmpty" style="display:none;">
+          <div class="icon">🏋️</div>
+          No workouts logged yet — head to <strong>Log Workout</strong> to add your first session.
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== LOG WORKOUT ===== -->
+    <section class="tab-panel" id="tab-log" style="display:none;">
+      <div class="page-head">
+        <h1>Log Workout</h1>
+        <p>Record sets, reps and weight for each exercise.</p>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <form id="logForm" class="form-row">
+          <div class="field" style="margin:0;">
+            <label>Exercise</label>
+            <input type="text" id="exExercise" placeholder="e.g. Bench Press" required>
+          </div>
+          <div class="field" style="margin:0;">
+            <label>Sets</label>
+            <input type="number" id="exSets" min="1" required>
+          </div>
+          <div class="field" style="margin:0;">
+            <label>Reps</label>
+            <input type="number" id="exReps" min="1" required>
+          </div>
+          <div class="field" style="margin:0;">
+            <label>Weight (kg)</label>
+            <input type="number" id="exWeight" min="0" step="0.5" required>
+          </div>
+          <button type="submit" class="btn-primary" style="width:auto;padding:11px 18px;">Add</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <h3>All Sessions</h3>
+        <table class="table" id="logTable">
+          <thead><tr><th>Date</th><th>Exercise</th><th>Sets</th><th>Reps</th><th>Weight</th><th></th></tr></thead>
+          <tbody></tbody>
+        </table>
+        <div class="empty-state" id="logEmpty" style="display:none;">
+          <div class="icon">📋</div>
+          Nothing logged yet. Add your first entry above.
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PLANS ===== -->
+    <section class="tab-panel" id="tab-plans" style="display:none;">
+      <div class="page-head">
+        <h1>Workout Plans</h1>
+        <p>Pick a template to follow, or keep building your own log.</p>
+      </div>
+      <div class="grid grid-2" id="plansGrid"></div>
+    </section>
+
+    <!-- ===== BMI ===== -->
+    <section class="tab-panel" id="tab-bmi" style="display:none;">
+      <div class="page-head">
+        <h1>BMI Calculator</h1>
+        <p>Quick check on body mass index based on your height and weight.</p>
+      </div>
+      <div class="card" style="max-width:420px;">
+        <div class="field">
+          <label>Height (cm)</label>
+          <input type="number" id="bmiHeight" min="50" step="0.1">
+        </div>
+        <div class="field">
+          <label>Weight (kg)</label>
+          <input type="number" id="bmiWeight" min="20" step="0.1">
+        </div>
+        <button class="btn-primary" id="bmiCalcBtn">Calculate BMI</button>
+
+        <div class="bmi-result" id="bmiResult" style="display:none;">
+          <div class="stat" id="bmiValue">0.0</div>
+          <div id="bmiCategory" style="color:var(--muted);font-size:0.9rem;margin-top:2px;"></div>
+          <div class="bmi-scale">
+            <span class="bmi-under"></span><span class="bmi-normal"></span><span class="bmi-over"></span><span class="bmi-obese"></span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:0.7rem;color:var(--muted);margin-top:6px;">
+            <span>Under</span><span>Normal</span><span>Over</span><span>Obese</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===== PROGRESS ===== -->
+    <section class="tab-panel" id="tab-progress" style="display:none;">
+      <div class="page-head">
+        <h1>Progress</h1>
+        <p>Volume and frequency trends from your logged sessions.</p>
+      </div>
+      <div class="grid grid-2">
+        <div class="card">
+          <h3>Workouts per Day (last 14 days)</h3>
+          <canvas id="freqChart" height="200"></canvas>
+        </div>
+        <div class="card">
+          <h3>Top Lift Weight Progression</h3>
+          <select id="progressExerciseSelect" style="width:100%;margin-bottom:10px;background:var(--surface-2);color:var(--text);border:1px solid var(--line);border-radius:6px;padding:8px;"></select>
+          <canvas id="weightChart" height="200"></canvas>
+        </div>
+      </div>
+      <div class="empty-state" id="progressEmpty" style="display:none;">
+        <div class="icon">📈</div>
+        Log a few workouts to start seeing trends here.
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/api.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
