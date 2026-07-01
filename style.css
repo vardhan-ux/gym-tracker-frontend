@@ -1,110 +1,454 @@
 /* =========================================================
-   GYM TRACKER — API client
-   Talks to the Express + MongoDB backend.
-   Only the JWT token + a lightweight cached user object are
-   kept in localStorage; all real data lives in MongoDB.
+   LIFTNOVA — Design Tokens
+   Display: Oswald (condensed, bold, gym signage feel)
+   Body/UI: Inter
+   Palette: pure black ground, silver accent, gray secondary
    ========================================================= */
+:root {
+  --bg: #080808;
+  --surface: #111111;
+  --surface-2: #1a1a1a;
+  --line: #2a2a2a;
+  --text: #e8e8e8;
+  --muted: #888888;
+  --volt: #c0c0c0;
+  --volt-dim: #a0a0a0;
+  --coral: #aaaaaa;
+  --radius: 10px;
+  --shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
 
-// CHANGE THIS to your deployed backend URL once hosted
-// e.g. 'https://gym-tracker-api.onrender.com/api'
-const API_BASE = window.API_BASE_URL || 'https://gym-tracker-backend-1-1oax.onrender.com';
+* { box-sizing: border-box; }
 
-const Api = (() => {
-  const TOKEN_KEY = 'gt_token';
-  const USER_KEY = 'gt_user';
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
 
-  function getToken() {
-    return localStorage.getItem(TOKEN_KEY);
-  }
-  function setSession(token, user) {
-    localStorage.setItem(TOKEN_KEY, token);
-    localStorage.setItem(USER_KEY, JSON.stringify(user));
-  }
-  function clearSession() {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(USER_KEY);
-  }
-  function cachedUser() {
-    const raw = localStorage.getItem(USER_KEY);
-    return raw ? JSON.parse(raw) : null;
-  }
+h1, h2, h3, .display {
+  font-family: 'Oswald', sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
 
-  async function request(path, { method = 'GET', body, auth = true } = {}) {
-    const headers = { 'Content-Type': 'application/json' };
-    if (auth) {
-      const token = getToken();
-      if (token) headers['Authorization'] = `Bearer ${token}`;
-    }
-    const res = await fetch(`${API_BASE}${path}`, {
-      method,
-      headers,
-      body: body ? JSON.stringify(body) : undefined
-    });
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-      throw new Error(data.message || `Request failed (${res.status})`);
-    }
-    return data;
-  }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
 
-  return {
-    // ---- Auth ----
-    async signup({ name, email, password }) {
-      const data = await request('/auth/signup', { method: 'POST', body: { name, email, password }, auth: false });
-      setSession(data.token, data.user);
-      return data.user;
-    },
-    async login(email, password) {
-      const data = await request('/auth/login', { method: 'POST', body: { email, password }, auth: false });
-      setSession(data.token, data.user);
-      return data.user;
-    },
-    async me() {
-      const data = await request('/auth/me');
-      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-      return data.user;
-    },
-    async updateProfile(patch) {
-      const data = await request('/auth/me', { method: 'PATCH', body: patch });
-      localStorage.setItem(USER_KEY, JSON.stringify(data.user));
-      return data.user;
-    },
-    logout() { clearSession(); },
-    getToken,
-    cachedUser,
+:focus-visible {
+  outline: 2px solid var(--volt);
+  outline-offset: 2px;
+}
 
-    // ---- Workouts ----
-    async getWorkouts() {
-      const data = await request('/workouts');
-      return data.workouts;
-    },
-    async addWorkout(entry) {
-      const data = await request('/workouts', { method: 'POST', body: entry });
-      return data.workout;
-    },
-    async deleteWorkout(id) {
-      await request(`/workouts/${id}`, { method: 'DELETE' });
-    },
+/* ---------- Layout shells ---------- */
+.auth-shell {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 20% 10%, rgba(255,255,255,0.03), transparent 40%),
+    var(--bg);
+}
 
-    // ---- Plans ----
-    async getPlans() {
-      const data = await request('/plans', { auth: false });
-      return data.plans;
-    }
-  };
-})();
+.app-shell {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  min-height: 100vh;
+}
 
-/** Redirects to login if there's no token; resolves to the cached user otherwise. */
-async function requireAuthAsync() {
-  if (!Api.getToken()) {
-    window.location.href = 'index.html';
-    return null;
-  }
-  try {
-    return await Api.me(); // also validates token is still good
-  } catch (err) {
-    Api.logout();
-    window.location.href = 'index.html';
-    return null;
-  }
+@media (max-width: 760px) {
+  .app-shell { grid-template-columns: 1fr; }
+}
+
+/* ---------- Auth card ---------- */
+.auth-card {
+  width: 100%;
+  max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 32px;
+  box-shadow: var(--shadow);
+}
+
+.auth-card .brand {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.auth-card .brand span { color: var(--volt); }
+
+.auth-card .tagline {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 24px;
+}
+
+.field {
+  margin-bottom: 16px;
+}
+.field label {
+  display: block;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.field input, .field select {
+  width: 100%;
+  padding: 11px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 0.95rem;
+}
+.field input:focus, .field select:focus {
+  border-color: var(--volt);
+}
+
+.btn-primary {
+  width: 100%;
+  padding: 13px;
+  background: var(--volt);
+  color: #111111;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.9rem;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+.btn-primary:hover { background: var(--volt-dim); transform: translateY(-1px); }
+
+.btn-ghost {
+  width: 100%;
+  padding: 12px;
+  background: transparent;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  font-weight: 600;
+  margin-top: 10px;
+}
+.btn-ghost:hover { border-color: var(--volt); }
+
+.auth-switch {
+  text-align: center;
+  margin-top: 18px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+.auth-switch button {
+  background: none;
+  border: none;
+  color: var(--volt);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.error-msg {
+  background: rgba(170,170,170,0.12);
+  border: 1px solid var(--coral);
+  color: var(--coral);
+  font-size: 0.8rem;
+  padding: 8px 10px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+  display: none;
+}
+.error-msg.show { display: block; }
+
+/* ---------- Sidebar ---------- */
+.sidebar {
+  background: var(--surface);
+  border-right: 1px solid var(--line);
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+}
+.sidebar .brand {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 28px;
+  padding: 0 8px;
+}
+.sidebar .brand span { color: var(--volt); }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 12px;
+  border-radius: 8px;
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 0.88rem;
+  margin-bottom: 4px;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+.nav-item:hover { color: var(--text); background: var(--surface-2); }
+.nav-item.active { color: #111111; background: var(--volt); }
+
+.sidebar .user-box {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.sidebar .user-name {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.sidebar .logout-link {
+  font-size: 0.78rem;
+  color: var(--coral);
+  margin-top: 6px;
+  display: inline-block;
+}
+
+/* Mobile nav */
+.mobile-bar {
+  display: none;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  padding: 14px 18px;
+  align-items: center;
+  justify-content: space-between;
+}
+@media (max-width: 760px) {
+  .sidebar { display: none; }
+  .mobile-bar { display: flex; }
+}
+
+/* ---------- Main content ---------- */
+.main {
+  padding: 32px;
+  max-width: 1080px;
+  width: 100%;
+}
+@media (max-width: 760px) { .main { padding: 20px; } }
+
+.page-head {
+  margin-bottom: 24px;
+}
+.page-head h1 { font-size: 1.8rem; }
+.page-head p { color: var(--muted); margin-top: 4px; font-size: 0.9rem; }
+
+.grid {
+  display: grid;
+  gap: 18px;
+}
+.grid-3 { grid-template-columns: repeat(3, 1fr); }
+.grid-2 { grid-template-columns: repeat(2, 1fr); }
+@media (max-width: 760px) {
+  .grid-3, .grid-2 { grid-template-columns: 1fr; }
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+.card h3 {
+  font-size: 0.78rem;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+  margin-bottom: 10px;
+}
+.card .stat {
+  font-family: 'Oswald', sans-serif;
+  font-size: 2.1rem;
+  font-weight: 600;
+}
+.card .stat small {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  color: var(--muted);
+  font-weight: 400;
+  margin-left: 4px;
+}
+
+/* ---------- Streak ring (signature element) ---------- */
+.streak-card {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.streak-ring {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+}
+.streak-ring svg { transform: rotate(-90deg); }
+.streak-ring .ring-bg { fill: none; stroke: var(--surface-2); stroke-width: 8; }
+.streak-ring .ring-fg {
+  fill: none;
+  stroke: var(--volt);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s ease;
+}
+.streak-ring .ring-label {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.4rem;
+  font-weight: 600;
+}
+
+/* ---------- Forms / tables ---------- */
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+@media (max-width: 760px) {
+  .form-row { grid-template-columns: 1fr 1fr; }
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 14px;
+}
+.table th {
+  text-align: left;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.table td {
+  padding: 10px;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.88rem;
+}
+.table tr:last-child td { border-bottom: none; }
+.table .del-btn {
+  background: none;
+  border: none;
+  color: var(--coral);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+}
+.empty-state .icon { font-size: 2rem; margin-bottom: 8px; }
+
+/* ---------- Plan templates ---------- */
+.plan-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+.plan-card h3 {
+  color: var(--text);
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.1rem;
+  text-transform: none;
+  margin-bottom: 4px;
+}
+.plan-card .tag {
+  display: inline-block;
+  background: rgba(255,255,255,0.08);
+  color: var(--volt);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+.plan-card ul { margin: 10px 0 0; padding-left: 18px; color: var(--muted); font-size: 0.85rem; }
+.plan-card li { margin-bottom: 4px; }
+.plan-card .use-btn {
+  margin-top: 14px;
+  width: 100%;
+  padding: 9px;
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.82rem;
+}
+.plan-card .use-btn:hover { border-color: var(--volt); color: var(--volt); }
+
+/* ---------- BMI ---------- */
+.bmi-result {
+  margin-top: 20px;
+  padding: 18px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+}
+.bmi-scale {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-top: 14px;
+}
+.bmi-scale span { flex: 1; }
+.bmi-under { background: #4fa8e0; }
+.bmi-normal { background: var(--volt); }
+.bmi-over { background: #ffb23a; }
+.bmi-obese { background: var(--coral); }
+.bmi-marker {
+  position: relative;
+  height: 0;
+}
+.bmi-marker::before {
+  content: '';
+  position: absolute;
+  top: -16px;
+  width: 2px;
+  height: 16px;
+  background: #fff;
+}
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: var(--surface-2);
+  border: 1px solid var(--volt);
+  color: var(--text);
+  padding: 12px 18px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  box-shadow: var(--shadow);
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all 0.25s ease;
+  pointer-events: none;
+  z-index: 50;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
 }
