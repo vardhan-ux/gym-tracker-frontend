@@ -27,7 +27,7 @@ let allPlans = [];
   document.getElementById('bmiWeight').value = user.weight || '';
 
   const params = new URLSearchParams(window.location.search);
-  if (params.get('welcome')) showToast(`Welcome to IRONLOG, ${user.name.split(' ')[0]}!`);
+  if (params.get('welcome')) showToast(`Welcome to LiftNova, ${user.name.split(' ')[0]}!`);
 })();
 
 /* ---------- Tab navigation ---------- */
